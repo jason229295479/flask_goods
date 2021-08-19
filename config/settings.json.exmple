@@ -1,0 +1,23 @@
+{
+  "DEBUG": true,
+  "TESTING":true,
+  "SALT": "demo_salt",
+  "JWT": {
+    "expired_at": 1
+  },
+  "LOG_PATH": "./logs",
+  "ENV":"development",
+  "SECRET_KEY": "demo_secret_key",
+  "REDIS": {
+    "host": "127.0.0.1",
+    "port": 6379,
+    "db": 0
+  },
+  "MYSQL": {
+    "user":"root",
+    "password":"123456",
+    "host":"127.0.0.1",
+    "port":"3306",
+    "dbname":"test"
+  }
+}

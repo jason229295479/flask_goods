@@ -11,4 +11,4 @@ if __name__ == '__main__':
                            host=mysql_json.get("host"),
                            port=mysql_json.get("port"), dbname=mysql_json.get("dbname"))
 
-    main(repository='migrations', url=db_url, debug='False')
+    main(repository='migrations', url=db_url, debug='True')

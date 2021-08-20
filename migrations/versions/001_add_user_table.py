@@ -1,8 +1,8 @@
-import json
 import time
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
 
 from tools.code import generate_md5
+from manage import config
 
 meta = MetaData()
 
@@ -50,16 +50,14 @@ goods_record = Table(
 
 def upgrade(migrate_engine):
     meta.bind = migrate_engine
-    with open("config/settings.json") as f:
-        config = json.loads(f.read())
-        user.create()
-        res = user.insert().values(user_name="admin", mobile=config.get("DEFAULT_MOBILE"),
-                                   password=generate_md5(config.get("SALT") + config.get("DEFAULT_PASSWORD")),
-                                   created_time=int(time.time()))
-        migrate_engine.execute(res)
-        goods_category.create()
-        goods.create()
-        goods_record.create()
+    user.create()
+    res = user.insert().values(user_name="admin", mobile=config.get("DEFAULT_MOBILE"),
+                               password=generate_md5(config.get("SALT") + config.get("DEFAULT_PASSWORD")),
+                               created_time=int(time.time()))
+    migrate_engine.execute(res)
+    goods_category.create()
+    goods.create()
+    goods_record.create()
 
 
 def downgrade(migrate_engine):

@@ -1,17 +1,53 @@
 # 出入库视图
 
 from flask import request
+from sqlalchemy import desc
 
 import enums
-
 from libs import db
 from model.user import Record
-from tools.render import render_failed, render_success
+from tools.render import get_page, render_success, render_failed
 from . import record_bps
 
 
-@record_bps.route("/api/records", methods=["POST"])
+@record_bps.route("/api/records", methods=["GET,POST"])
 def record_view():
+    if request.method == "GET":
+        return get_record()
+    else:
+        return create_record()
+
+
+def get_record():
+    page, page_size, offset, sort, order = get_page()
+    if sort:
+        order = desc(order)
+    query = db.query(Record)
+    res = query.order_by(order).offset(offset).limit(page_size).all()
+    data = {
+        "list": [{
+            "id": i.id,
+            "type": i.name,
+            "inventory_count": i.inventory_count,
+            "category": i.category,
+            "state": i.state,
+            "operation_time": i.operation_time,
+            "operatoroperator": i.operator,
+            "remarkremark": i.remark,
+
+        } for i in res],
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "order": order,
+            "sort": sort,
+            "total": query.count()
+        }
+    }
+    return render_success(data)
+
+
+def create_record():
     name = request.json.get("name")
     inventory_count = request.json.get("inventory_count")
     category = request.json.get("goods_category.id")

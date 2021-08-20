@@ -1,28 +1,92 @@
 """
-库存管理 post
+库存管理  get
 """
+
 from flask import request
+from sqlalchemy import desc
 
-import enums
 from libs import db
-from model.user import GoodsCategory, Goods
-from tools.render import render_success, render_failed
+from model.user import Goods, GoodsCategory
+from tools.render import get_page, render_success, render_failed
 from . import goods_bp, goods_category_bp
+import enums
 
 
-# 添加商品类别
-@goods_category_bp.route("/api/goods_category_bp", methods=["POST"])
+@goods_category_bp.route("/api/goods_category", methods=["GET,POST"])
 def goods_category_view():
-    type = request.json.get("type")
-    category = GoodsCategory(type=type)
+    if request.method == "GET":
+        return get_goods_category()
+    else:
+        return create_goods_category()
+
+
+def get_goods_category():
+    page, page_size, offset, sort, order = get_page()
+    if sort:
+        order = desc(order)
+    query = db.query(GoodsCategory)
+    res = query.order_by(order).offset(offset).limit(page_size).all()
+    data = {
+        "list": [{
+            "id": i.id,
+            "type": i.type,
+        } for i in res],
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "order": order,
+            "sort": sort,
+            "total": query.count()
+        }
+    }
+    return render_success(data)
+
+
+def create_goods_category():
+    goods_type = request.json.get("type")
+    category = GoodsCategory(type=goods_type)
     db.add(category)
     db.commit()
     return render_success()
 
 
-# 商品视图
-@goods_bp.route("/api/goods", methods=["POST"])
+@goods_bp.route("/api/goods", methods=["GET,POST"])
 def goods_view():
+    if request.method == "GET":
+        return get_goods()
+    else:
+        return create_goods()
+
+
+def get_goods():
+    page, page_size, offset, sort, order = get_page()
+    if sort:
+        order = desc(order)
+    query = db.query(Goods)
+    res = query.order_by(order).offset(offset).limit(page_size).all()
+    data = {
+        "list": [{
+            "id": i.id,
+            "name": i.name,
+            "number": i.number,
+            "category": i.category,
+            "expiring": i.expiring,
+            "specification": i.specification,
+            "unit": i.unit,
+            "inventory_count": i.inventory_count,
+        } for i in res],
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "order": order,
+            "sort": sort,
+            "total": query.count()
+        }
+    }
+    return render_success(data)
+
+
+def create_goods():
     name = request.json.get("name")
     producer = request.json.get("producer")
     number = request.json.get("number")

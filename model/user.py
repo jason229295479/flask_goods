@@ -18,13 +18,3 @@ class User(Base):
     last_login_time = Column(INT(), default=0)
     created_time = Column(INT(), default=int(time.time()))
     updated_time = Column(INT(), default=int(time.time()), onupdate=int(time.time()))
-
-
-class GoodsCategory(Base):
-    # 表的名字:
-    __tablename__ = "goods_category"
-
-    id = Column(INT(), primary_key=True)
-    name = Column(String(), )  # 商品类别
-
-

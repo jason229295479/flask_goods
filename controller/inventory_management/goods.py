@@ -4,9 +4,10 @@
 
 from flask import request
 from sqlalchemy import desc
+import logging
 
 from libs import db
-from model.user import Goods, GoodsCategory
+from model.goods import Goods, GoodsCategory
 from tools.render import get_page, render_success, render_failed
 from . import goods_bp, goods_category_bp
 import enums
@@ -90,17 +91,24 @@ def create_goods():
     name = request.json.get("name")
     producer = request.json.get("producer")
     number = request.json.get("number")
-    category = request.json.get("goods_category.id")
-    expiring = request.json.get("expiring")
+    category_id = request.json.get("category_id")
+    expired_time = request.json.get("expired_time")
     specification = request.json.get("specification")
     unit = request.json.get("unit")
     inventory_count = request.json.get("inventory_count")
     # 数据不能为空
-    if not all([name, producer, number, category,
-                expiring, specification, unit, inventory_count]):
+    if not all([name, producer, number, category_id,
+                expired_time, specification, unit, inventory_count]):
         return render_failed(" ", enums.param_err)
+    try:
+        category_id = int(category_id)
+        expired_time = int(expired_time)
+        inventory_count = int(inventory_count)
+    except Exception as e:
+        logging.info(f"try to covert str to int failed:{str(e)}")
+        return render_failed(" ", str(e))
     goods = Goods(name=name, producer=producer, number=number,
-                  category=category, expiring=expiring, specification=specification,
+                  category_id=category_id, expired_time=expired_time, specification=specification,
                   unit=unit, inventory_count=inventory_count, )
     # 更新数据库
     db.add(goods)

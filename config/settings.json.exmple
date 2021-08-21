@@ -3,6 +3,7 @@
   "PORT": 5000,
   "TESTING": true,
   "DEFAULT_PASSWORD": "123456",
+   "DEFAULT_MOBILE": "15669908726",
   "JWT": {
     "expired_at": 1
   },

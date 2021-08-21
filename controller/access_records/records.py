@@ -5,7 +5,7 @@ from sqlalchemy import desc
 
 import enums
 from libs import db
-from model.user import Record
+from model.record import Record
 from tools.render import get_page, render_success, render_failed
 from . import record_bps
 
@@ -60,7 +60,7 @@ def create_record():
                 state, operation_time, operator, remark]):
         return render_failed(" ", enums.param_err)
     record = Record(name=name, inventory_count=inventory_count, category=category,
-                    state=state, operation_time=operation_time, operator=operator,
+                    state=state, operation_time=operation_time, operator_id=operator,
                     remark=remark)
     # 更新数据库
     db.add(record)

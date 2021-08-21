@@ -1,4 +1,8 @@
+import time
 from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
+
+from tools.code import generate_md5
+from manage import config
 
 meta = MetaData()
 
@@ -25,11 +29,10 @@ goods = Table(
     Column('name', String(40)),
     Column('producer', String(40)),
     Column('number', String(40)),
-    Column('category', Integer, ForeignKey('goods_category.id')),
-    Column('expiring', Integer),
+    Column('expired_time', Integer),
     Column('specification', String(40)),
     Column('unit', String(40)),
-    Column('inventory_count', String(40)),
+    Column('inventory_count', Integer),
 )
 
 goods_record = Table(
@@ -37,10 +40,10 @@ goods_record = Table(
     Column('id', Integer, primary_key=True),
     Column('name', String(40)),
     Column('inventory_count', Integer),
-    Column('category', Integer, ForeignKey('goods_category.id')),
+    Column('goods_id', Integer, ForeignKey('goods.id')),
     Column('state', String(40)),
     Column('operation_time', Integer),
-    Column('operator', Integer, ForeignKey('user.id')),
+    Column('operator_id', Integer, ForeignKey('user.id')),
     Column('remark', String(40)),
 )
 
@@ -48,6 +51,10 @@ goods_record = Table(
 def upgrade(migrate_engine):
     meta.bind = migrate_engine
     user.create()
+    res = user.insert().values(user_name="admin", mobile=config.get("DEFAULT_MOBILE"),
+                               password=generate_md5(config.get("SALT") + config.get("DEFAULT_PASSWORD")),
+                               created_time=int(time.time()))
+    migrate_engine.execute(res)
     goods_category.create()
     goods.create()
     goods_record.create()
@@ -55,7 +62,7 @@ def upgrade(migrate_engine):
 
 def downgrade(migrate_engine):
     meta.bind = migrate_engine
-    user.drop()
+    goods_record.drop()
     goods_category.drop()
     goods.drop()
-    goods_record.drop()
+    user.drop()

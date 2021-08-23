@@ -62,7 +62,7 @@ def upgrade(migrate_engine):
 
 def downgrade(migrate_engine):
     meta.bind = migrate_engine
-    goods_record.drop()
     goods_category.drop()
-    goods.drop()
     user.drop()
+    goods_record.drop()
+    goods.drop()

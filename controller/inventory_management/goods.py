@@ -1,6 +1,7 @@
 """
 库存管理  get
 """
+import time
 
 from flask import request
 from sqlalchemy import desc
@@ -13,12 +14,9 @@ from . import goods_bp, goods_category_bp
 import enums
 
 
-@goods_category_bp.route("/api/goods_category", methods=["GET,POST"])
+@goods_category_bp.route("/api/goods_category", methods=["GET"])
 def goods_category_view():
-    if request.method == "GET":
-        return get_goods_category()
-    else:
-        return create_goods_category()
+    return create_goods_category()
 
 
 def get_goods_category():
@@ -43,6 +41,7 @@ def get_goods_category():
     return render_success(data)
 
 
+@goods_category_bp.route("/api/goods_category", methods=["POST"])
 def create_goods_category():
     goods_type = request.json.get("type")
     category = GoodsCategory(type=goods_type)
@@ -51,12 +50,9 @@ def create_goods_category():
     return render_success()
 
 
-@goods_bp.route("/api/goods", methods=["GET,POST"])
+@goods_bp.route("/api/goods", methods=["GET"])
 def goods_view():
-    if request.method == "GET":
-        return get_goods()
-    else:
-        return create_goods()
+    return create_goods()
 
 
 def get_goods():
@@ -87,6 +83,7 @@ def get_goods():
     return render_success(data)
 
 
+@goods_bp.route("/api/goods", methods=["POST"])
 def create_goods():
     name = request.json.get("name")
     producer = request.json.get("producer")
@@ -102,13 +99,14 @@ def create_goods():
         return render_failed(" ", enums.param_err)
     try:
         category_id = int(category_id)
-        expired_time = int(expired_time)
+        expired_time = int(time.mktime(time.strptime(expired_time, "%Y-%m-%d")))
+        # expired_time = int(expired_time)
         inventory_count = int(inventory_count)
     except Exception as e:
         logging.info(f"try to covert str to int failed:{str(e)}")
         return render_failed(" ", str(e))
     goods = Goods(name=name, producer=producer, number=number,
-                  category_id=category_id, expired_time=expired_time, specification=specification,
+                  category=category_id, expired_time=expired_time, specification=specification,
                   unit=unit, inventory_count=inventory_count, )
     # 更新数据库
     db.add(goods)

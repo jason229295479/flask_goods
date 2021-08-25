@@ -29,6 +29,7 @@ goods = Table(
     Column('name', String(40)),
     Column('producer', String(40)),
     Column('number', String(40)),
+    Column('category', Integer, index=True),
     Column('expired_time', Integer),
     Column('specification', String(40)),
     Column('unit', String(40)),
@@ -40,10 +41,10 @@ goods_record = Table(
     Column('id', Integer, primary_key=True),
     Column('name', String(40)),
     Column('inventory_count', Integer),
-    Column('goods_id', Integer, ForeignKey('goods.id')),
+    Column('goods_id', Integer, index=True),
     Column('state', String(40)),
     Column('operation_time', Integer),
-    Column('operator_id', Integer, ForeignKey('user.id')),
+    Column('operator_id', Integer, index=True),
     Column('remark', String(40)),
 )
 

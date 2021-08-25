@@ -50,7 +50,7 @@ def get_record():
 def create_record():
     name = request.json.get("name")
     inventory_count = request.json.get("inventory_count")
-    goods_id = request.json.get("goods.id")
+    goods_id = request.json.get("goods_id")
     state = request.json.get("state")
     operation_time = request.json.get("operation_time")
     operator_id = request.json.get("user.id")

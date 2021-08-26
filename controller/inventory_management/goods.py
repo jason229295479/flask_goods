@@ -1,10 +1,10 @@
 """
 库存管理  get
 """
-import time
 
-from flask import request, session
-from sqlalchemy import desc
+
+from flask import request
+
 import logging
 
 from libs import DBSession

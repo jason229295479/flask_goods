@@ -2,6 +2,8 @@ from time import time
 import logging
 
 from flask import request, jsonify
+from sqlalchemy import desc
+
 from . import code
 
 default_page = 1
@@ -22,6 +24,8 @@ def get_page():
         page_size = default_page_size
         sort = default_sort
         order = default_order
+    if sort:
+        order = desc(order)
     return page, page_size, (page - 1) * page_size, sort, order
 
 

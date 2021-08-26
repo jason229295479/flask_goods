@@ -1,6 +1,7 @@
 import logging
 
 from flask import request
+from sqlalchemy.exc import InvalidRequestError
 
 from tools import render
 

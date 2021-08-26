@@ -16,3 +16,5 @@ class Record(Base):
     operation_time = Column(INT(), default=int(time.time()))  # 操作时间
     operator_id = Column(INT(), index=True)  # 操作人
     remark = Column(String(), )  # 备注
+    created_time = Column(INT(), default=int(time.time()))
+    updated_time = Column(INT(), default=int(time.time()), onupdate=int(time.time()))

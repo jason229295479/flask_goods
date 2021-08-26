@@ -1,10 +1,6 @@
-from flask import request, current_app
-from sqlalchemy import desc
 from . import users_bp
-import enums
-from tools.render import render_failed, render_success, get_page
-from tools import code
-from libs import ts, db
+from tools.render import render_success, get_page
+from libs import DBSession
 from model.user import User
 
 
@@ -14,9 +10,8 @@ def users_view():
 
 
 def get_users():
+    db = DBSession()
     page, page_size, offset, sort, order = get_page()
-    if sort:
-        order = desc(order)
     query = db.query(User)
     res = query.order_by(order).offset(offset).limit(page_size).all()
     data = {

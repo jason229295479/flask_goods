@@ -55,8 +55,15 @@ class Db:
             if not self.result:
                 self.err = enums.error_id
                 return
+
             for key, value in update_map.json.items():
                 if hasattr(self.result, key):
                     setattr(self.result, key, value)
 
         return self.scope_session(_update_one)
+
+    def add_one(self, operate_id, add_map):
+        def _add_one():
+            pass
+
+        return self.scope_session(_add_one)

@@ -66,7 +66,8 @@ def create_goods():
     expired_time = request.json.get("expired_time")
     specification = request.json.get("specification")
     unit = request.json.get("unit")
-    inventory_count = request.json.get("inventory_count")
+    # 新建商品默认为0 ,出入库操作是添加库存
+    inventory_count = 0
     # 判断 goods_category表中的id 与接收的id是否一致
     category_id_res = db.query(GoodsCategory).filter(GoodsCategory.id == category_id).first()
     if not category_id_res:
@@ -83,7 +84,7 @@ def create_goods():
     except Exception as e:
         logging.info(f"try to covert str to int failed:{str(e)}")
         return render_failed(" ", str(e))
-    goods = Goods(name=name, producer=producer, number=number,
+    goods = Goods(name=name, producer=producer, number=0,
                   category_id=category_id, expired_time=expired_time, specification=specification,
                   unit=unit, inventory_count=inventory_count, )
     # 更新数据库
@@ -92,7 +93,7 @@ def create_goods():
     return render_success()
 
 
-@goods_category_bp.route("/api/goods/<goods_id>", methods=["PUT", "DELETE"])
+@goods_bp.route("/api/goods/<goods_id>", methods=["PUT", "DELETE"])
 def goods_id_view(goods_id):
     if not goods_id:
         return render_failed(msg=enums.error_id)

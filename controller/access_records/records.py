@@ -7,14 +7,19 @@ from sqlalchemy import desc
 
 import enums
 from libs import DBSession
+from libs.db import Db
+from model.goods import Goods
 from model.record import Record
+from tools.bind import bind_json
 from tools.render import get_page, render_success, render_failed
 from . import record_bps
+from params.records import RecordsParams
 
 
 @record_bps.route("/api/records", methods=["GET"])
 def record_view():
-    return create_record()
+    if request.method == "GET":
+        return get_record()
 
 
 def get_record():
@@ -46,12 +51,19 @@ def get_record():
 
 
 # 增
-@record_bps.route("/api/records", methods=["POST"])
-def create_record():
-    db = DBSession()
-    name = request.json.get("name")
-    inventory_count = request.json.get("inventory_count")
-    goods_id = request.json.get("goods_id")
+@record_bps.route("/api/records/<goods_id>", methods=["POST"])
+def create_record(goods_id):
+    params = RecordsParams()
+    if err := bind_json(params):
+        return render_failed(msg=err)
+    db = Db()
+    db.create_one(goods_id, params)
+    return render_success()
+"""
+ goods = request.goods
+    name = goods.name
+    inventory_count = request.json.get("inventory_count")  # 出入库数量
+    goods_id = goods.category_id
     state = request.json.get("state")
     operation_time = request.json.get("operation_time")
     operator_id = request.json.get("user.id")
@@ -65,7 +77,7 @@ def create_record():
         inventory_count = int(inventory_count)
         state = int(state)
         operation_time = int(time.mktime(time.strptime(operation_time, "%Y-%m-%d")))
-    #    expired_time = datetime.strptime(expired_time, "%Y-%m-%d")
+        #    expired_time = datetime.strptime(expired_time, "%Y-%m-%d")
         operator_id = int(operator_id)
     except Exception as e:
         logging.info(f"try to covert str to int failed:{str(e)}")
@@ -77,3 +89,5 @@ def create_record():
     db.add(record)
     db.commit()
     return render_success()
+"""
+

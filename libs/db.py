@@ -32,7 +32,8 @@ class Db:
             # if any kind of exception occurs, rollback transaction
             logging.error(e)
             self.session.rollback()
-            return str(e)
+            self.err = enums.db_error
+            return
         finally:
             self.session.close()
 
@@ -57,4 +58,5 @@ class Db:
             for key, value in update_map.json.items():
                 if hasattr(self.result, key):
                     setattr(self.result, key, value)
+
         return self.scope_session(_update_one)

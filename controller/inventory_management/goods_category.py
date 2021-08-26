@@ -60,8 +60,8 @@ def goods_category_id_view(category_id):
     category_id = int(category_id)
     if request.method == "PUT":
         return edit_goods_category(category_id)
-    elif request.method == "POST":
-        return create_goods_category()
+    elif request.method == "DELETE":
+        return delete_goods_category(category_id)
     else:
         return render_failed(msg="nonsupport method", status_code=enums.NonsupportMethod)
 

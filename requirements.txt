@@ -1,5 +1,6 @@
 attrs==21.2.0
 click==8.0.1
+colorama==0.4.4
 decorator==5.0.9
 Flask==2.0.1
 greenlet==1.1.1
@@ -8,7 +9,9 @@ Jinja2==3.0.1
 MarkupSafe==2.0.1
 multidict==5.1.0
 mysql-connector==2.2.9
+mysql-connector-python==8.0.26
 pbr==5.6.0
+protobuf==3.17.3
 PyJWT==2.1.0
 redis==3.5.3
 six==1.16.0

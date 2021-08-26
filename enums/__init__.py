@@ -8,6 +8,7 @@ account_password_error = "account_password_error"
 auth_error = "auth_error"
 auth_invalid = "auth_invalid"
 error_id = "error_id"
+db_error = "db_error"
 password_not_the_same = "password_not_the_same"
 
 #

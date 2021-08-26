@@ -2,17 +2,16 @@
 库存管理  get
 """
 import time
-
-from flask import request, session
-from sqlalchemy import desc
 import logging
 
+from flask import request
+
+import enums
+from . import goods_bp, goods_category_bp
 from libs import DBSession
 from libs.db import Db
 from model.goods import Goods, GoodsCategory
 from tools.render import get_page, render_success, render_failed
-from . import goods_bp, goods_category_bp
-import enums
 from tools.bind import bind_json
 from params.goods import GoodsParams
 
@@ -28,7 +27,8 @@ def goods_view():
 def get_goods():
     db = DBSession()
     page, page_size, offset, sort, order = get_page()
-    query = db.query(Goods)
+    query = db.query(Goods, GoodsCategory).select_from(Goods).outerjoin(GoodsCategory,
+                                                                        Goods.category_id == GoodsCategory.id)
     res = query.order_by(order).offset(offset).limit(page_size).all()
     data = {
         "list": [{
@@ -40,10 +40,11 @@ def get_goods():
             "expired_time": i.expired_time,
             "specification": i.specification,
             "unit": i.unit,
+            "type": n.type,
             "inventory_count": i.inventory_count,
             "created_time": i.created_time,
             "updated_time": i.created_time,
-        } for i in res],
+        } for i, n in res],
         "pagination": {
             "page": page,
             "page_size": page_size,
@@ -118,7 +119,6 @@ def edit_goods(goods_id):
     params = GoodsParams()
     if err := bind_json(params):
         return render_failed(msg=err)
-    print('---------', params)
     db = Db()
     db.update_one(Goods, goods_id, params)
     return render_success()

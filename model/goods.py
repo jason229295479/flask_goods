@@ -1,7 +1,7 @@
 import time
 
 from sqlalchemy import Column, String, INT, ForeignKey
-
+from sqlalchemy.orm import relationship
 from .base import Base
 
 

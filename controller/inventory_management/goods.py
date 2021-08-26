@@ -11,8 +11,8 @@ from . import goods_bp, goods_category_bp
 from libs import DBSession
 from libs.db import Db
 from model.goods import Goods, GoodsCategory
-from tools.render import get_page, render_success, render_failed
-from tools.bind import bind_json
+from tools.render import get_page, render_success, render_failed, Pagination
+from tools.bind import bind_json, to_json
 from params.goods import GoodsParams
 
 
@@ -26,32 +26,14 @@ def goods_view():
 
 def get_goods():
     db = DBSession()
-    page, page_size, offset, sort, order = get_page()
+    pagination = Pagination()
     query = db.query(Goods, GoodsCategory).select_from(Goods).outerjoin(GoodsCategory,
                                                                         Goods.category_id == GoodsCategory.id)
-    res = query.order_by(order).offset(offset).limit(page_size).all()
+    pagination.total = query.count()
+    res = query.order_by(pagination.order_by).offset(pagination.offset).limit(pagination.page_size).all()
     data = {
-        "list": [{
-            "id": i.id,
-            "name": i.name,
-            "number": i.number,
-            "producer": i.producer,
-            "category_id": i.category_id,
-            "expired_time": i.expired_time,
-            "specification": i.specification,
-            "unit": i.unit,
-            "type": n.type,
-            "inventory_count": i.inventory_count,
-            "created_time": i.created_time,
-            "updated_time": i.created_time,
-        } for i, n in res],
-        "pagination": {
-            "page": page,
-            "page_size": page_size,
-            "order": order,
-            "sort": sort,
-            "total": query.count()
-        }
+        "list": [dict(to_json(i), **to_json(n, needList=["type"])) for i, n in res],
+        "pagination": pagination.to_dict()
     }
     return render_success(data)
 

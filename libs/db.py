@@ -3,6 +3,8 @@ import logging
 
 from . import DBSession
 import enums
+from tools.render import Pagination
+from tools.bind import to_json
 
 
 class Db:
@@ -60,3 +62,11 @@ class Db:
                     setattr(self.result, key, value)
 
         return self.scope_session(_update_one)
+
+    def query_all(self, model, **kwargs):
+        pagination = Pagination()
+        query = self.session.query(model).filter_by(**kwargs)
+        pagination.total = query.count()
+        res = query.order_by(pagination.order_by).offset(pagination.offset).limit(pagination.page_size).all()
+        self.session.close()
+        return res, pagination

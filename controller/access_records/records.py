@@ -46,6 +46,7 @@ def get_record():
     return render_success(data)
 
 
+# 增
 @record_bps.route("/api/records", methods=["POST"])
 def create_record():
     name = request.json.get("name")

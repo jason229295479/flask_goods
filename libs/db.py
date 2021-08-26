@@ -55,5 +55,6 @@ class Db:
                 self.err = enums.error_id
                 return
             for key, value in update_map.json.items():
-                setattr(self.result, key, value)
+                if hasattr(self.result, key):
+                    setattr(self.result, key, value)
         return self.scope_session(_update_one)

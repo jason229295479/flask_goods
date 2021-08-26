@@ -6,7 +6,7 @@ from flask import request
 from sqlalchemy import desc
 
 import enums
-from libs import db
+from libs import DBSession
 from model.record import Record
 from tools.render import get_page, render_success, render_failed
 from . import record_bps
@@ -18,9 +18,8 @@ def record_view():
 
 
 def get_record():
+    db = DBSession()
     page, page_size, offset, sort, order = get_page()
-    if sort:
-        order = desc(order)
     query = db.query(Record)
     res = query.order_by(order).offset(offset).limit(page_size).all()
     data = {
@@ -49,6 +48,7 @@ def get_record():
 # 增
 @record_bps.route("/api/records", methods=["POST"])
 def create_record():
+    db = DBSession()
     name = request.json.get("name")
     inventory_count = request.json.get("inventory_count")
     goods_id = request.json.get("goods_id")

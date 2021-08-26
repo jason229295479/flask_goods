@@ -15,3 +15,4 @@ register_sms_key = "register_"
 
 Authorization = "Authorization"
 current_user = "current_user"
+NonsupportMethod = 405

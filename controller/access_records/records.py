@@ -1,14 +1,12 @@
 # 出入库视图
-import logging
-import time
+
 
 from flask import request
-from sqlalchemy import desc
 
-import enums
+
 from libs import DBSession
 from libs.db import Db
-from model.goods import Goods
+
 from model.record import Record
 from tools.bind import bind_json
 from tools.render import get_page, render_success, render_failed

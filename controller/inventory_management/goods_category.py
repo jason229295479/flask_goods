@@ -26,7 +26,7 @@ def get_goods_category():
     db = Db()
     res, pagination = db.query_all(GoodsCategory)
     data = {
-        "list": [to_json(i, needList=["id", "type"]) for i in res],
+        "list": [to_json(i) for i in res],
         "pagination": pagination.to_dict()
     }
     return render_success(data)
@@ -42,15 +42,15 @@ def create_goods_category():
     return render_success()
 
 
-@goods_category_bp.route("/api/goods_category/<category_id>", methods=["PUT", "DELETE"])
+@goods_category_bp.route("/api/goods/category/<category_id>", methods=["PUT", "DELETE"])
 def goods_category_id_view(category_id):
     if not category_id:
         return render_failed(msg=enums.error_id)
     category_id = int(category_id)
     if request.method == "PUT":
         return edit_goods_category(category_id)
-    elif request.method == "POST":
-        return create_goods_category()
+    elif request.method == "DELETE":
+        return delete_goods_category(category_id)
     else:
         return render_failed(msg="nonsupport method", status_code=enums.NonsupportMethod)
 

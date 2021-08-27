@@ -28,6 +28,6 @@ class Goods(Base):
     expired_time = Column(INT(), default=int(time.time()))  # 有效日期
     specification = Column(String(), )  # 规格信息
     unit = Column(String(), )  # 单位
-    inventory_count = Column(INT(), )  # 库存数量
+    inventory_count = Column(INT(), default=0)  # 库存数量
     created_time = Column(INT(), default=int(time.time()))
     updated_time = Column(INT(), default=int(time.time()), onupdate=int(time.time()))

@@ -6,7 +6,7 @@ from flask import request
 
 from libs import DBSession
 from model.goods import GoodsCategory
-from tools.render import get_page, render_success, render_failed
+from tools.render import render_success, render_failed, to_json
 from . import goods_category_bp
 import enums
 from libs.db import Db
@@ -23,22 +23,11 @@ def goods_category_view():
 
 
 def get_goods_category():
-    db = DBSession()
-    page, page_size, offset, sort, order = get_page()
-    query = db.query(GoodsCategory)
-    res = query.order_by(order).offset(offset).limit(page_size).all()
+    db = Db()
+    res, pagination = db.query_all(GoodsCategory)
     data = {
-        "list": [{
-            "id": i.id,
-            "type": i.type,
-        } for i in res],
-        "pagination": {
-            "page": page,
-            "page_size": page_size,
-            "order": order,
-            "sort": sort,
-            "total": query.count()
-        }
+        "list": [to_json(i, needList=["id", "type"]) for i in res],
+        "pagination": pagination.to_dict()
     }
     return render_success(data)
 

@@ -1,18 +1,17 @@
 """
 库存管理  get
 """
-
+import time
 import logging
 
-from flask import request
+from flask import request, g
 
 import enums
-from . import goods_bp
-from libs import DBSession
+from . import goods_bp, goods_category_bp
 from libs.db import Db
 from model.goods import Goods, GoodsCategory
-from tools.render import get_page, render_success, render_failed
-from tools.bind import bind_json
+from tools.render import get_page, render_success, render_failed, Pagination
+from tools.bind import bind_json, to_json
 from params.goods import GoodsParams
 
 
@@ -25,49 +24,30 @@ def goods_view():
 
 
 def get_goods():
-    db = DBSession()
-    page, page_size, offset, sort, order = get_page()
+    db = Db()
+    pagination = Pagination()
     query = db.query(Goods, GoodsCategory).select_from(Goods).outerjoin(GoodsCategory,
                                                                         Goods.category_id == GoodsCategory.id)
-    res = query.order_by(order).offset(offset).limit(page_size).all()
+    pagination.total = query.count()
+    res = query.order_by(pagination.order_by).offset(pagination.offset).limit(pagination.page_size).all()
     data = {
-        "list": [{
-            "id": i.id,
-            "name": i.name,
-            "number": i.number,
-            "producer": i.producer,
-            "category_id": i.category_id,
-            "expired_time": i.expired_time,
-            "specification": i.specification,
-            "unit": i.unit,
-            "type": n.type,
-            "inventory_count": i.inventory_count,
-            "created_time": i.created_time,
-            "updated_time": i.created_time,
-        } for i, n in res],
-        "pagination": {
-            "page": page,
-            "page_size": page_size,
-            "order": order,
-            "sort": sort,
-            "total": query.count()
-        }
+        "list": [dict(to_json(i), **to_json(n, needList=["type"])) for i, n in res],
+        "pagination": pagination.to_dict()
     }
     return render_success(data)
 
 
 # 增
 def create_goods():
-    db = DBSession()
-    name = request.json.get("name")
-    producer = request.json.get("producer")
-    number = request.json.get("number")
-    category_id = request.json.get("category_id")
-    expired_time = request.json.get("expired_time")
-    specification = request.json.get("specification")
-    unit = request.json.get("unit")
-    # 新建商品默认为0 ,出入库操作是添加库存
-    inventory_count = 0
+    db = Db()
+    params = GoodsParams()
+    if err := bind_json(params):
+        return render_failed(msg=err)
+    user = g.get(enums.current_user)
+    setattr(params, "user_id", user.get("id"))
+    if err := params.required(required_list=["name", "producer", "number", "category_id",
+                                             "expired_time", "specification", "unit"]):
+        return render_failed(getattr(params, "json"), err)
     # 判断 goods_category表中的id 与接收的id是否一致
     category_id_res = db.query(GoodsCategory).filter(GoodsCategory.id == category_id).first()
     if not category_id_res:
@@ -84,7 +64,7 @@ def create_goods():
     except Exception as e:
         logging.info(f"try to covert str to int failed:{str(e)}")
         return render_failed(" ", str(e))
-    goods = Goods(name=name, producer=producer, number=0,
+    goods = Goods(name=name, producer=producer, number=number,
                   category_id=category_id, expired_time=expired_time, specification=specification,
                   unit=unit, inventory_count=inventory_count, )
     # 更新数据库
@@ -93,7 +73,7 @@ def create_goods():
     return render_success()
 
 
-@goods_bp.route("/api/goods/<goods_id>", methods=["PUT", "DELETE"])
+@goods_category_bp.route("/api/goods/<goods_id>", methods=["PUT", "DELETE"])
 def goods_id_view(goods_id):
     if not goods_id:
         return render_failed(msg=enums.error_id)
@@ -120,6 +100,9 @@ def edit_goods(goods_id):
     params = GoodsParams()
     if err := bind_json(params):
         return render_failed(msg=err)
+    if err := params.required(required_list=["name", "producer", "number", "category_id",
+                                             "expired_time", "specification", "unit"]):
+        return render_failed(getattr(params, "json"), err)
     db = Db()
     db.update_one(Goods, goods_id, params)
     return render_success()

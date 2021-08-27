@@ -9,3 +9,4 @@ class GoodsParams(Base):
     expired_time = 0
     specification = ""
     unit = 0
+

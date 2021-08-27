@@ -8,5 +8,5 @@ class GoodsParams(Base):
     category_id = 0
     expired_time = 0
     specification = ""
-    unit = 0
+    unit = ""
 

@@ -62,8 +62,4 @@ class Db:
 
         return self.scope_session(_update_one)
 
-    def add_one(self, operate_id, add_map):
-        def _add_one():
-            pass
 
-        return self.scope_session(_add_one)

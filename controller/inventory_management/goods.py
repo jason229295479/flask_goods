@@ -1,13 +1,13 @@
 """
 库存管理  get
 """
-import time
+
 import logging
 
 from flask import request
 
 import enums
-from . import goods_bp, goods_category_bp
+from . import goods_bp
 from libs import DBSession
 from libs.db import Db
 from model.goods import Goods, GoodsCategory

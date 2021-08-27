@@ -10,7 +10,7 @@ import enums
 from . import goods_bp, goods_category_bp
 from libs.db import Db
 from model.goods import Goods, GoodsCategory
-from tools.render import get_page, render_success, render_failed, Pagination
+from tools.render import  render_success, render_failed, Pagination
 from tools.bind import bind_json, to_json
 from params.goods import GoodsParams
 
@@ -37,6 +37,7 @@ def get_goods():
     return render_success(data)
 
 
+
 # 增
 def create_goods():
     db = Db()
@@ -49,29 +50,11 @@ def create_goods():
                                              "expired_time", "specification", "unit"]):
         return render_failed(getattr(params, "json"), err)
     # 判断 goods_category表中的id 与接收的id是否一致
-    category_id_res = db.query(GoodsCategory).filter(GoodsCategory.id == category_id).first()
+    category_id_res = db.query(GoodsCategory).filter(GoodsCategory.id == params.category_id).first()
     if not category_id_res:
         return render_failed("", enums.error_id)
-    # 数据不能为空
-    if not all([name, producer, number, category_id,
-                expired_time, specification, unit, inventory_count]):
-        return render_failed(" ", enums.param_err)
-    try:
-        category_id = int(category_id)
-        expired_time = int(expired_time)
-        # expired_time = int(expired_time)
-        inventory_count = int(inventory_count)
-    except Exception as e:
-        logging.info(f"try to covert str to int failed:{str(e)}")
-        return render_failed(" ", str(e))
-    goods = Goods(name=name, producer=producer, number=number,
-                  category_id=category_id, expired_time=expired_time, specification=specification,
-                  unit=unit, inventory_count=inventory_count, )
-    # 更新数据库
-    db.add(goods)
-    db.commit()
+    db.create_one(model=Goods, insert_map=params)
     return render_success()
-
 
 @goods_category_bp.route("/api/goods/<goods_id>", methods=["PUT", "DELETE"])
 def goods_id_view(goods_id):

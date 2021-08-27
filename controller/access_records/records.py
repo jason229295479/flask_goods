@@ -3,16 +3,14 @@
 
 from flask import request
 
-import enums
+
 from libs import DBSession
-from libs.db import Db
-from model.goods import Goods
+
 
 from model.record import Record
-from tools.bind import bind_json
-from tools.render import get_page, render_success, render_failed
+
+from tools.render import get_page, render_success
 from . import record_bps
-from params.records import RecordsParams
 
 
 @record_bps.route("/api/records", methods=["GET"])
@@ -54,5 +52,3 @@ def get_record():
 def create_record():
     # 先更新库存
     pass
-
-

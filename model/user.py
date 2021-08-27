@@ -1,8 +1,8 @@
 import time
 
-from sqlalchemy import Column, String, INT, ForeignKey
+from sqlalchemy import Column, String, INT
 
-from .base import Base
+from base import Base
 
 
 # 定义User对象:

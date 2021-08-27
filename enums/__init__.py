@@ -1,4 +1,5 @@
 param_err = "param_err"
+lost_param_err = "lost_param_err"
 sms_repetition = "sms_repetition"
 sms_code_valid = "sms_code_valid"
 sms_code_err = "sms_code_err"
@@ -8,6 +9,7 @@ account_password_error = "account_password_error"
 auth_error = "auth_error"
 auth_invalid = "auth_invalid"
 error_id = "error_id"
+db_error = "db_error"
 password_not_the_same = "password_not_the_same"
 
 #
@@ -15,3 +17,4 @@ register_sms_key = "register_"
 
 Authorization = "Authorization"
 current_user = "current_user"
+NonsupportMethod = 405

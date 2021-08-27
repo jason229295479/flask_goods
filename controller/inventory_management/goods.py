@@ -2,113 +2,92 @@
 库存管理  get
 """
 import time
-
-from flask import request
-from sqlalchemy import desc
 import logging
 
-from libs import db
-from model.goods import Goods, GoodsCategory
-from tools.render import get_page, render_success, render_failed
-from . import goods_bp, goods_category_bp
+from flask import request, g
+
 import enums
+from . import goods_bp, goods_category_bp
+from libs.db import Db
+from model.goods import Goods, GoodsCategory
+from tools.render import get_page, render_success, render_failed, Pagination
+from tools.bind import bind_json, to_json
+from params.goods import GoodsParams
 
 
-@goods_category_bp.route("/api/goods_category", methods=["GET"])
-def goods_category_view():
-    return create_goods_category()
-
-
-def get_goods_category():
-    page, page_size, offset, sort, order = get_page()
-    if sort:
-        order = desc(order)
-    query = db.query(GoodsCategory)
-    res = query.order_by(order).offset(offset).limit(page_size).all()
-    data = {
-        "list": [{
-            "id": i.id,
-            "type": i.type,
-        } for i in res],
-        "pagination": {
-            "page": page,
-            "page_size": page_size,
-            "order": order,
-            "sort": sort,
-            "total": query.count()
-        }
-    }
-    return render_success(data)
-
-
-@goods_category_bp.route("/api/goods_category", methods=["POST"])
-def create_goods_category():
-    goods_type = request.json.get("type")
-    category = GoodsCategory(type=goods_type)
-    db.add(category)
-    db.commit()
-    return render_success()
-
-
-@goods_bp.route("/api/goods", methods=["GET"])
+@goods_bp.route("/api/goods", methods=["GET", "POST"])
 def goods_view():
-    return create_goods()
+    if request.method == "GET":
+        return get_goods()
+    else:
+        return create_goods()
 
 
 def get_goods():
-    page, page_size, offset, sort, order = get_page()
-    if sort:
-        order = desc(order)
-    query = db.query(Goods)
-    res = query.order_by(order).offset(offset).limit(page_size).all()
+    db = Db()
+    pagination = Pagination()
+    query = db.query(Goods, GoodsCategory).select_from(Goods).outerjoin(GoodsCategory,
+                                                                        Goods.category_id == GoodsCategory.id)
+    pagination.total = query.count()
+    res = query.order_by(pagination.order_by).offset(pagination.offset).limit(pagination.page_size).all()
     data = {
-        "list": [{
-            "id": i.id,
-            "name": i.name,
-            "number": i.number,
-            "category": i.category,
-            "expiring": i.expiring,
-            "specification": i.specification,
-            "unit": i.unit,
-            "inventory_count": i.inventory_count,
-        } for i in res],
-        "pagination": {
-            "page": page,
-            "page_size": page_size,
-            "order": order,
-            "sort": sort,
-            "total": query.count()
-        }
+        "list": [dict(to_json(i), **to_json(n, needList=["type"])) for i, n in res],
+        "pagination": pagination.to_dict()
     }
     return render_success(data)
 
 
-@goods_bp.route("/api/goods", methods=["POST"])
+# 增
 def create_goods():
-    name = request.json.get("name")
-    producer = request.json.get("producer")
-    number = request.json.get("number")
-    category_id = request.json.get("category_id")
-    expired_time = request.json.get("expired_time")
-    specification = request.json.get("specification")
-    unit = request.json.get("unit")
-    inventory_count = request.json.get("inventory_count")
-    # 数据不能为空
-    if not all([name, producer, number, category_id,
-                expired_time, specification, unit, inventory_count]):
-        return render_failed(" ", enums.param_err)
-    try:
-        category_id = int(category_id)
-        expired_time = int(time.mktime(time.strptime(expired_time, "%Y-%m-%d")))
-        # expired_time = int(expired_time)
-        inventory_count = int(inventory_count)
-    except Exception as e:
-        logging.info(f"try to covert str to int failed:{str(e)}")
-        return render_failed(" ", str(e))
-    goods = Goods(name=name, producer=producer, number=number,
-                  category=category_id, expired_time=expired_time, specification=specification,
-                  unit=unit, inventory_count=inventory_count, )
-    # 更新数据库
-    db.add(goods)
-    db.commit()
+    db = Db()
+    params = GoodsParams()
+    if err := bind_json(params):
+        return render_failed(msg=err)
+    user = g.get(enums.current_user)
+    setattr(params, "user_id", user.get("id"))
+    if err := params.required(required_list=["name", "producer", "number", "category_id",
+                                             "expired_time", "specification", "unit"]):
+        return render_failed(getattr(params, "json"), err)
+    # 判断 goods_category表中的id 与接收的id是否一致
+    category_id_res = db.query(GoodsCategory).filter(GoodsCategory.id == params.category_id).first()
+    if not category_id_res:
+        return render_failed("", enums.error_id)
+    db.create_one(model=Goods, insert_map=params)
     return render_success()
+
+
+@goods_category_bp.route("/api/goods/<goods_id>", methods=["PUT", "DELETE"])
+def goods_id_view(goods_id):
+    if not goods_id:
+        return render_failed(msg=enums.error_id)
+    goods_id = int(goods_id)
+    if request.method == "PUT":
+        return edit_goods(goods_id)
+    elif request.method == "DELETE":
+        return delete_goods(goods_id)
+    else:
+        return render_failed(msg="nonsupport method", status_code=enums.NonsupportMethod)
+
+
+# 删
+def delete_goods(goods_id):
+    db = Db()
+    db.delete_one(Goods, goods_id)
+    if db.err:
+        return render_failed(msg=db.err)
+    return render_success()
+
+
+# 改
+def edit_goods(goods_id):
+    params = GoodsParams()
+    if err := bind_json(params):
+        return render_failed(msg=err)
+    if err := params.required(required_list=["name", "producer", "number", "category_id",
+                                             "expired_time", "specification", "unit"]):
+        return render_failed(getattr(params, "json"), err)
+    db = Db()
+    db.update_one(Goods, goods_id, params)
+    return render_success()
+
+# 查

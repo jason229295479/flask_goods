@@ -1,4 +1,7 @@
-class GoodsParams:
+from . import Base
+
+
+class GoodsParams(Base):
     name = ""
     producer = ""
     number = ""
@@ -6,4 +9,3 @@ class GoodsParams:
     expired_time = 0
     specification = ""
     unit = 0
-    inventory_count = 0

@@ -22,6 +22,9 @@ class Db:
         self.err = None
         self.result = None
 
+    def query(self, *entities, **kwargs):
+        return self.session.query(*entities, **kwargs)
+
     def scope_session(self, func):
         try:
             def inner(*args, **kwargs):
@@ -36,8 +39,6 @@ class Db:
             self.session.rollback()
             self.err = enums.db_error
             return
-        finally:
-            self.session.close()
 
     def delete_one(self, model, operate_id):
         def _delete_one():
@@ -68,5 +69,17 @@ class Db:
         query = self.session.query(model).filter_by(**kwargs)
         pagination.total = query.count()
         res = query.order_by(pagination.order_by).offset(pagination.offset).limit(pagination.page_size).all()
-        self.session.close()
         return res, pagination
+
+    def create_one(self, model, insert_map):
+        def _create_one():
+            self.result = model()
+            for key, value in insert_map.json.items():
+                if hasattr(self.result, key):
+                    setattr(self.result, key, value)
+            self.session.add(self.result)
+
+        return self.scope_session(_create_one)
+
+    def __del__(self):
+        self.session.close()

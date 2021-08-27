@@ -4,11 +4,10 @@
 import time
 import logging
 
-from flask import request
+from flask import request, g
 
 import enums
 from . import goods_bp, goods_category_bp
-from libs import DBSession
 from libs.db import Db
 from model.goods import Goods, GoodsCategory
 from tools.render import get_page, render_success, render_failed, Pagination
@@ -25,7 +24,7 @@ def goods_view():
 
 
 def get_goods():
-    db = DBSession()
+    db = Db()
     pagination = Pagination()
     query = db.query(Goods, GoodsCategory).select_from(Goods).outerjoin(GoodsCategory,
                                                                         Goods.category_id == GoodsCategory.id)
@@ -40,37 +39,20 @@ def get_goods():
 
 # 增
 def create_goods():
-    db = DBSession()
-    name = request.json.get("name")
-    producer = request.json.get("producer")
-    number = request.json.get("number")
-    category_id = request.json.get("category_id")
-    expired_time = request.json.get("expired_time")
-    specification = request.json.get("specification")
-    unit = request.json.get("unit")
-    inventory_count = request.json.get("inventory_count")
+    db = Db()
+    params = GoodsParams()
+    if err := bind_json(params):
+        return render_failed(msg=err)
+    user = g.get(enums.current_user)
+    setattr(params, "user_id", user.get("id"))
+    if err := params.required(required_list=["name", "producer", "number", "category_id",
+                                             "expired_time", "specification", "unit"]):
+        return render_failed(getattr(params, "json"), err)
     # 判断 goods_category表中的id 与接收的id是否一致
-    category_id_res = db.query(GoodsCategory).filter(GoodsCategory.id == category_id).first()
+    category_id_res = db.query(GoodsCategory).filter(GoodsCategory.id == params.category_id).first()
     if not category_id_res:
         return render_failed("", enums.error_id)
-    # 数据不能为空
-    if not all([name, producer, number, category_id,
-                expired_time, specification, unit, inventory_count]):
-        return render_failed(" ", enums.param_err)
-    try:
-        category_id = int(category_id)
-        expired_time = int(expired_time)
-        # expired_time = int(expired_time)
-        inventory_count = int(inventory_count)
-    except Exception as e:
-        logging.info(f"try to covert str to int failed:{str(e)}")
-        return render_failed(" ", str(e))
-    goods = Goods(name=name, producer=producer, number=number,
-                  category_id=category_id, expired_time=expired_time, specification=specification,
-                  unit=unit, inventory_count=inventory_count, )
-    # 更新数据库
-    db.add(goods)
-    db.commit()
+    db.create_one(model=Goods, insert_map=params)
     return render_success()
 
 
@@ -101,6 +83,9 @@ def edit_goods(goods_id):
     params = GoodsParams()
     if err := bind_json(params):
         return render_failed(msg=err)
+    if err := params.required(required_list=["name", "producer", "number", "category_id",
+                                             "expired_time", "specification", "unit"]):
+        return render_failed(getattr(params, "json"), err)
     db = Db()
     db.update_one(Goods, goods_id, params)
     return render_success()

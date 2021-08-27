@@ -10,7 +10,7 @@ import enums
 from . import goods_bp, goods_category_bp
 from libs.db import Db
 from model.goods import Goods, GoodsCategory
-from tools.render import  render_success, render_failed, Pagination
+from tools.render import render_success, render_failed, Pagination
 from tools.bind import bind_json, to_json
 from params.goods import GoodsParams
 
@@ -37,7 +37,6 @@ def get_goods():
     return render_success(data)
 
 
-
 # 增
 def create_goods():
     db = Db()
@@ -56,7 +55,8 @@ def create_goods():
     db.create_one(model=Goods, insert_map=params)
     return render_success()
 
-@goods_category_bp.route("/api/goods/<goods_id>", methods=["PUT", "DELETE"])
+
+@goods_bp.route("/api/goods/<goods_id>", methods=["PUT", "DELETE"])
 def goods_id_view(goods_id):
     if not goods_id:
         return render_failed(msg=enums.error_id)

@@ -4,6 +4,8 @@ from flask import request
 
 import enums
 
+_sa_instance_state = '_sa_instance_state'
+
 
 def bind_json(params):
     items = {}
@@ -17,3 +19,16 @@ def bind_json(params):
     except Exception as e:
         logging.error(e)
         return enums.param_err
+
+
+def to_json(ormObject, needList: list = None, ignoreList: list = None) -> dict:
+    items = ormObject.__dict__
+    if _sa_instance_state in items:
+        items.pop("_sa_instance_state")
+    if needList:
+        items = {k: v for k, v in items.items() if k in needList}
+    elif ignoreList:
+        for ignore in ignoreList:
+            if ignore in items:
+                items.pop(ignore)
+    return items

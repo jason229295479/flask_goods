@@ -4,7 +4,6 @@ import logging
 from . import DBSession
 import enums
 from tools.render import Pagination
-from tools.bind import to_json
 
 
 class Db:

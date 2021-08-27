@@ -2,7 +2,7 @@ import time
 
 from sqlalchemy import Column, String, INT, ForeignKey
 from sqlalchemy.orm import relationship
-from base import Base
+from .base import Base
 
 
 class GoodsCategory(Base):

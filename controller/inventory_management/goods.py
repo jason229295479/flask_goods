@@ -5,11 +5,13 @@ import time
 import logging
 
 from flask import request, g
+from sqlalchemy import or_
 
 import enums
 from . import goods_bp, goods_category_bp
 from libs.db import Db
 from model.goods import Goods, GoodsCategory
+from model.record import Record
 from tools.render import render_success, render_failed, Pagination
 from tools.bind import bind_json, to_json, bind_param
 from params.goods import GoodsSaveParams, GoodsParams
@@ -32,6 +34,10 @@ def get_goods():
     query = db.query(Goods, GoodsCategory).select_from(Goods)
     if params.category_id:
         query = query.filter(GoodsCategory.id == params.category_id)
+    if params.keyword:
+        keyword = f"%{params.keyword}%"
+        query = query.filter(
+            or_(Goods.name.like(keyword), Goods.producer.like(keyword), Goods.number.like(keyword)))
     query = query.outerjoin(GoodsCategory, Goods.category_id == GoodsCategory.id)
     pagination.total = query.count()
     res = query.order_by(pagination.order_by).offset(pagination.offset).limit(pagination.page_size).all()
@@ -77,6 +83,7 @@ def goods_id_view(goods_id):
 # 删
 def delete_goods(goods_id):
     db = Db()
+    db.session.query(Record).filter(Record.goods_id == goods_id).delete()
     db.delete_one(Goods, goods_id)
     if db.err:
         return render_failed(msg=db.err)

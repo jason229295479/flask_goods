@@ -13,3 +13,4 @@ class GoodsSaveParams(Base):
 
 class GoodsParams(Base):
     category_id = 0
+    keyword = ""

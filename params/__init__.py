@@ -6,3 +6,6 @@ class Base:
         if required_list:
             if not all([getattr(self, i) for i in required_list]):
                 return lost_param_err
+
+    def verify(self):
+        pass

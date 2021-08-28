@@ -43,7 +43,6 @@ goods = Table(
 goods_record = Table(
     "goods_record", meta,
     Column('id', Integer, primary_key=True),
-    Column('name', String(40)),
     Column('inventory_count', Integer),
     Column('goods_id', Integer, index=True),
     Column('state', String(40)),

@@ -8,17 +8,22 @@ _sa_instance_state = '_sa_instance_state'
 
 
 def bind_json(params):
-    items = {}
+    return set_params(params, request.json)
+
+
+def set_params(params, args):
     try:
-        for k, v in request.json.items():
+        for k, v in args.items():
             if hasattr(params, k):
                 v = type(getattr(params, k))(v)
-                items[k] = v
                 setattr(params, k, v)
-        setattr(params, "json", items)
     except Exception as e:
         logging.error(e)
         return enums.param_err
+
+
+def bind_param(params):
+    return set_params(params, request.args)
 
 
 def to_json(ormObject, needList: list = None, ignoreList: list = None) -> dict:

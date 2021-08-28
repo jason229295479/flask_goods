@@ -1,7 +1,7 @@
 from . import Base
 
 
-class GoodsParams(Base):
+class GoodsSaveParams(Base):
     name = ""
     producer = ""
     number = ""
@@ -10,3 +10,6 @@ class GoodsParams(Base):
     specification = ""
     unit = ""
 
+
+class GoodsParams(Base):
+    category_id = 0

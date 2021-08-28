@@ -11,8 +11,8 @@ from . import goods_bp, goods_category_bp
 from libs.db import Db
 from model.goods import Goods, GoodsCategory
 from tools.render import render_success, render_failed, Pagination
-from tools.bind import bind_json, to_json
-from params.goods import GoodsParams
+from tools.bind import bind_json, to_json, bind_param
+from params.goods import GoodsSaveParams, GoodsParams
 
 
 @goods_bp.route("/api/goods", methods=["GET", "POST"])
@@ -25,9 +25,14 @@ def goods_view():
 
 def get_goods():
     db = Db()
+    params = GoodsParams()
     pagination = Pagination()
-    query = db.query(Goods, GoodsCategory).select_from(Goods).outerjoin(GoodsCategory,
-                                                                        Goods.category_id == GoodsCategory.id)
+    if err := bind_param(params):
+        return render_failed(msg=err)
+    query = db.query(Goods, GoodsCategory).select_from(Goods)
+    if params.category_id:
+        query = query.filter(GoodsCategory.id == params.category_id)
+    query = query.outerjoin(GoodsCategory, Goods.category_id == GoodsCategory.id)
     pagination.total = query.count()
     res = query.order_by(pagination.order_by).offset(pagination.offset).limit(pagination.page_size).all()
     data = {
@@ -40,7 +45,7 @@ def get_goods():
 # 增
 def create_goods():
     db = Db()
-    params = GoodsParams()
+    params = GoodsSaveParams()
     if err := bind_json(params):
         return render_failed(msg=err)
     user = g.get(enums.current_user)
@@ -80,7 +85,7 @@ def delete_goods(goods_id):
 
 # 改
 def edit_goods(goods_id):
-    params = GoodsParams()
+    params = GoodsSaveParams()
     if err := bind_json(params):
         return render_failed(msg=err)
     if err := params.required(required_list=["name", "producer", "number", "category_id",

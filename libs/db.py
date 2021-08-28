@@ -3,7 +3,7 @@ import logging
 
 from . import DBSession
 import enums
-from tools.render import Pagination
+from tools.render import Pagination, to_json
 
 
 class Db:
@@ -24,18 +24,30 @@ class Db:
     def query(self, *entities, **kwargs):
         return self.session.query(*entities, **kwargs)
 
+    def add(self, instance, _warn=True):
+        return self.session.add(instance, _warn)
+
+    def commit(self):
+        return self.session.commit()
+
+    def delete(self, instance):
+        return self.session.delete(instance)
+
+    def rollback(self):
+        return self.session.rollback()
+
     def scope_session(self, func):
         try:
             def inner(*args, **kwargs):
                 return func(*args, **kwargs)
 
             inner()
-            self.session.commit()
+            self.commit()
             return
         except Exception as e:
             # if any kind of exception occurs, rollback transaction
             logging.error(e)
-            self.session.rollback()
+            self.rollback()
             self.err = enums.db_error
             return
 
@@ -53,7 +65,7 @@ class Db:
 
     def update_one(self, model, operate_id, update_map):
         def _update_one():
-            self.result = self.session.query(model).filter(model.id == operate_id).first()
+            self.result = self.query(model).filter(model.id == operate_id).first()
             if not self.result:
                 self.err = enums.error_id
                 return
@@ -65,7 +77,7 @@ class Db:
 
     def query_all(self, model, **kwargs):
         pagination = Pagination()
-        query = self.session.query(model).filter_by(**kwargs)
+        query = self.query(model).filter_by(**kwargs)
         pagination.total = query.count()
         res = query.order_by(pagination.order_by).offset(pagination.offset).limit(pagination.page_size).all()
         return res, pagination
@@ -73,10 +85,10 @@ class Db:
     def create_one(self, model, insert_map):
         def _create_one():
             self.result = model()
-            for key, value in insert_map.json.items():
+            for key, value in to_json(insert_map).items():
                 if hasattr(self.result, key):
                     setattr(self.result, key, value)
-            self.session.add(self.result)
+            self.add(self.result)
 
         return self.scope_session(_create_one)
 

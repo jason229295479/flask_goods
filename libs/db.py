@@ -21,6 +21,9 @@ class Db:
         self.err = None
         self.result = None
 
+    def to_json(self, needList: list = None, ignoreList: list = None):
+        return to_json(self.result, needList, ignoreList)
+
     def query(self, *entities, **kwargs):
         return self.session.query(*entities, **kwargs)
 
@@ -69,7 +72,7 @@ class Db:
             if not self.result:
                 self.err = enums.error_id
                 return
-            for key, value in update_map.json.items():
+            for key, value in to_json(update_map).items():
                 if hasattr(self.result, key):
                     setattr(self.result, key, value)
 

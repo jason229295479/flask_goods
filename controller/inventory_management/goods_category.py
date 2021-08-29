@@ -4,12 +4,12 @@
 
 from flask import request
 
-from libs import DBSession
 from model.goods import GoodsCategory
 from tools.render import render_success, render_failed, to_json
 from . import goods_category_bp
 import enums
 from libs.db import Db
+from params.goods_category import GoodsCategorySaveParam
 
 
 @goods_category_bp.route("/api/goods/category", methods=["GET", "POST"])
@@ -34,11 +34,13 @@ def get_goods_category():
 
 # 增
 def create_goods_category():
-    db = DBSession()
-    goods_type = request.json.get("type")
-    category = GoodsCategory(type=goods_type)
-    db.add(category)
-    db.commit()
+    db = Db()
+    param = GoodsCategorySaveParam()
+    if err := param.check_param():
+        return render_failed(msg=err)
+    db.create_one(GoodsCategory, param)
+    if db.err:
+        return render_failed(msg=db.err)
     return render_success()
 
 
@@ -56,18 +58,13 @@ def goods_category_id_view(category_id):
 
 
 def edit_goods_category(category_id):
-    db = DBSession()
-    # 前端获取
-    goods_type = request.json.get("type")
-    if not goods_type:
-        return render_failed("", enums.param_err)
-    # 数据库查询
-    goods_category = db.query(GoodsCategory).filter(GoodsCategory.id == category_id).first()
-    if not goods_category:
-        return render_failed("", enums.error_id)
-    goods_category.type = goods_type
-    # 更新
-    db.commit()
+    db = Db()
+    param = GoodsCategorySaveParam()
+    if err := param.check_param():
+        return render_failed(msg=err)
+    db.update_one(GoodsCategory, category_id, param)
+    if db.err:
+        return render_failed(msg=db.err)
     return render_success()
 
 

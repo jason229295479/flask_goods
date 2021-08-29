@@ -26,18 +26,18 @@ def record_view():
 
 def get_record():
     db = Db()
-    params = RecordParam()
+    param = RecordParam()
     pagination = Pagination()
-    if err := bind_param(params):
+    if err := bind_param(param):
         return render_failed(msg=err)
     query = db.query(Record, Goods, User).select_from(Record)
-    if params.goods_id:
-        goods = db.query(Goods).filter(Goods.id == params.goods_id).first()
+    if param.goods_id:
+        goods = db.query(Goods).filter(Goods.id == param.goods_id).first()
         if not goods:
             return render_failed("", enums.error_id)
-        query = query.filter(Goods.id == params.goods_id)
-    if params.state:
-        query = query.filter(Record.state == params.state)
+        query = query.filter(Goods.id == param.goods_id)
+    if param.state:
+        query = query.filter(Record.state == param.state)
     query = query.outerjoin(Goods, Goods.id == Record.goods_id). \
         outerjoin(User, User.id == Record.operator_id)
     pagination.total = query.count()
@@ -52,25 +52,23 @@ def get_record():
 
 
 def create_record():
-    params = RecordSaveParam()
-    if err := bind_json(params):
+    param = RecordSaveParam()
+    if err := param.check_param():
         return render_failed(msg=err)
-    if err := params.verify():
-        return render_failed(getattr(params, "json"), err)
     db = Db()
-    goods = db.query(Goods).filter(Goods.id == params.goods_id).first()
+    goods = db.query(Goods).filter(Goods.id == param.goods_id).first()
     if not goods:
         return render_failed("", enums.error_id)
     user = g.get(enums.current_user)
-    setattr(params, "operator_id", user.get("id"))
-    setattr(params, "operation_time", int(time.time()))
-    if params.state < 0:
-        goods.inventory_count -= params.inventory_count
+    setattr(param, "operator_id", user.get("id"))
+    setattr(param, "operation_time", int(time.time()))
+    if param.state < 0:
+        goods.inventory_count -= param.inventory_count
         if goods.inventory_count < 0:
             return render_failed(msg=enums.inventory_count_lack)
     else:
-        goods.inventory_count += params.inventory_count
-    db.create_one(Record, params)
+        goods.inventory_count += param.inventory_count
+    db.create_one(Record, param)
     if db.err:
         return render_failed(msg=db.err)
     return render_success()

@@ -27,15 +27,15 @@ def goods_view():
 
 def get_goods():
     db = Db()
-    params = GoodsParams()
+    param = GoodsParams()
     pagination = Pagination()
-    if err := bind_param(params):
+    if err := param.check_param():
         return render_failed(msg=err)
     query = db.query(Goods, GoodsCategory).select_from(Goods)
-    if params.category_id:
-        query = query.filter(GoodsCategory.id == params.category_id)
-    if params.keyword:
-        keyword = f"%{params.keyword}%"
+    if param.category_id:
+        query = query.filter(GoodsCategory.id == param.category_id)
+    if param.keyword:
+        keyword = f"%{param.keyword}%"
         query = query.filter(
             or_(Goods.name.like(keyword), Goods.producer.like(keyword), Goods.number.like(keyword)))
     query = query.outerjoin(GoodsCategory, Goods.category_id == GoodsCategory.id)
@@ -51,19 +51,16 @@ def get_goods():
 # 增
 def create_goods():
     db = Db()
-    params = GoodsSaveParams()
-    if err := bind_json(params):
+    param = GoodsSaveParams()
+    if err := param.check_param():
         return render_failed(msg=err)
     user = g.get(enums.current_user)
-    setattr(params, "user_id", user.get("id"))
-    if err := params.required(required_list=["name", "producer", "number", "category_id",
-                                             "expired_time", "specification", "unit"]):
-        return render_failed(getattr(params, "json"), err)
+    setattr(param, "user_id", user.get("id"))
     # 判断 goods_category表中的id 与接收的id是否一致
-    category_id_res = db.query(GoodsCategory).filter(GoodsCategory.id == params.category_id).first()
-    if not category_id_res:
-        return render_failed("", enums.error_id)
-    db.create_one(model=Goods, insert_map=params)
+    res = db.query(GoodsCategory).filter(GoodsCategory.id == param.category_id).first()
+    if not res:
+        return render_failed(msg=enums.error_id)
+    db.create_one(model=Goods, insert_map=param)
     return render_success()
 
 
@@ -92,14 +89,9 @@ def delete_goods(goods_id):
 
 # 改
 def edit_goods(goods_id):
-    params = GoodsSaveParams()
-    if err := bind_json(params):
+    param = GoodsSaveParams()
+    if err := param.check_param():
         return render_failed(msg=err)
-    if err := params.required(required_list=["name", "producer", "number", "category_id",
-                                             "expired_time", "specification", "unit"]):
-        return render_failed(getattr(params, "json"), err)
     db = Db()
-    db.update_one(Goods, goods_id, params)
+    db.update_one(Goods, goods_id, param)
     return render_success()
-
-# 查

@@ -1,7 +1,7 @@
 import logging
 
 from flask import request
-
+from copy import deepcopy
 import enums
 
 _sa_instance_state = '_sa_instance_state'
@@ -23,11 +23,13 @@ def set_params(params, args):
 
 
 def bind_param(params):
+    if request.method in ["POST", "PUT", "PATCH"]:
+        return set_params(params, request.json)
     return set_params(params, request.args)
 
 
 def to_json(ormObject, needList: list = None, ignoreList: list = None) -> dict:
-    items = ormObject.__dict__
+    items = deepcopy(ormObject.__dict__)
     if _sa_instance_state in items:
         items.pop("_sa_instance_state")
     if needList:

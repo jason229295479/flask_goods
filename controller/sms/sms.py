@@ -7,7 +7,7 @@ from . import sms_bp
 import enums
 from tools.render import render_failed, render_success
 from tools import sms, code
-from libs import ts, DBSession
+from libs import ts
 
 
 @sms_bp.route("/api/sms", methods=["POST"])

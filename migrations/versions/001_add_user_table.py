@@ -45,7 +45,7 @@ goods_record = Table(
     Column('id', Integer, primary_key=True),
     Column('inventory_count', Integer),
     Column('goods_id', Integer, index=True),
-    Column('state', String(40)),
+    Column('state', Integer),
     Column('operation_time', Integer),
     Column('operator_id', Integer, index=True),
     Column('remark', String(40)),
